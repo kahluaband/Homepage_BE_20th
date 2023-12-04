@@ -90,7 +90,52 @@ class FreshmanTicketOrderView(viewsets.ModelViewSet):
         
         return Response({
             'status':'error',
-        }, status=status.HTTP_400_BAD_REQUEST)     
+        }, status=status.HTTP_400_BAD_REQUEST) 
+
+
+    @swagger_auto_schema(
+        operation_id='신입생 예매 확인',
+        operation_description='''
+            query parameter로 입력받은 student_id에 해당하는 티켓을 보여줍니다. <br/>
+        ''',
+        responses={
+            "200": openapi.Response(
+                description="OK",
+                examples={
+                    "application/json": {
+                        "status": "success",
+                        "data": {'id': 1,
+                             'buyer': '신입생1',
+                             'phone_num': '010-1234-5678',
+                             'major': '컴퓨터공학과',
+                             'student_id': 'C411111',
+                             'meeting': True,
+                             'reservation_id': '12345ABCDE'
+                            }
+                    }
+                }
+            ),
+            "400": openapi.Response(
+                description="Bad Request",
+            ),
+        }
+    )
+    def get(self, request, *args, **kwargs):
+        try:
+            reservation_id = request.query_params.get('reservation_id')
+            request = FreshmanTicket.objects.get(reservation_id=reservation_id)
+            serializer = self.get_serializer(request)
+
+            return Response({
+                'status': 'Success',
+                'data': serializer.data
+            }, status=status.HTTP_200_OK)
+        
+        except:
+            return Response({
+                'status': 'error',
+            }, status=status.HTTP_400_BAD_REQUEST)
+    
     
     @swagger_auto_schema(
         operation_id='신입생 예매 취소',
@@ -210,7 +255,7 @@ class GeneralTicketOrderView(viewsets.ModelViewSet):
         
         serializer = self.get_serializer(data=order_info)
         if serializer.is_valid(raise_exception=True):
-            new_order = serializer.save()
+            new_order = serializer.save()         
 
             mem = dict(zip(name_list, phone_list))
 
@@ -283,7 +328,6 @@ class OrderCheckoutView(viewsets.ModelViewSet):
 
     class Meta:
         examples = {
-            'reservation_id': 'ABCDE12345',
             'amount': 15000,
         }
 
