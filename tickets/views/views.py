@@ -28,6 +28,7 @@ class SetPartialMixin:
         return partial(serializer_class, partial=True)
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class FreshmanTicketOrderView(viewsets.ModelViewSet):
     queryset = FreshmanTicket.objects.all()
     serializer_class = FreshmanTicketDetailSerializer
@@ -257,8 +258,8 @@ class GeneralTicketOrderView(viewsets.ModelViewSet):
     )
     def create(self, request, *args, **kwargs):
         order_info = request.POST.copy()
-        name_list = order_info.getlist('name')
-        phone_list = order_info.getlist('phone')
+        name_list = order_info.getlist('name[]')
+        phone_list = order_info.getlist('phone[]')
 
         # if order_info['payment'] == '카카오페이':
         #     order_info['status'] = True
@@ -327,6 +328,7 @@ class GeneralTicketOrderView(viewsets.ModelViewSet):
             }, status=status.HTTP_400_BAD_REQUEST)
     
 
+@method_decorator(csrf_exempt, name='dispatch')
 class OrderCheckoutView(viewsets.ModelViewSet):
     permission_classes = (AllowAny, )
 
@@ -391,6 +393,7 @@ class OrderCheckoutView(viewsets.ModelViewSet):
             }, status=status.HTTP_400_BAD_REQUEST)
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class OrderValidationView(viewsets.ModelViewSet):
     permission_classes = (AllowAny, )
     
@@ -464,6 +467,7 @@ class OrderValidationView(viewsets.ModelViewSet):
             },status=status.HTTP_200_OK)
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class CancelTicketView(viewsets.ModelViewSet):
     permission_classes = (AllowAny, )
 
