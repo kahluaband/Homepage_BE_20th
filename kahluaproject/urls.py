@@ -16,6 +16,7 @@ Including another URLconf
 from django.conf import settings
 from django.contrib import admin
 from django.urls import path, include
+from django.conf.urls.static import static
 from rest_framework_jwt.views import obtain_jwt_token
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
@@ -29,7 +30,10 @@ urlpatterns = [
     path('tickets/', include('tickets.urls')),
     path('application/', include('application.urls')),
     path('kahlua_admin/', include('kahlua_admin.urls')),
+    path('introduction/', include('introduction.urls')),
 ]
+
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # API 문서에 작성될 소개 내용
 schema_view = get_schema_view(
