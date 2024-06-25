@@ -27,12 +27,12 @@ class SetPartialMixin:
         serializer_class = super().get_serializer_class(*args, **kwargs)
         return partial(serializer_class, partial=True)
 
-
-@method_decorator(csrf_exempt, name='dispatch')
-class FreshmanTicketOrderView(viewsets.ModelViewSet):
-    queryset = FreshmanTicket.objects.all()
-    serializer_class = FreshmanTicketDetailSerializer
-    permission_classes = (AllowAny, )
+@method_decorator(csrf_exempt, name='dispatch') # CSRF 보호 기능을 해제하기 csrf_exempt 데코레이터 적용
+# FreshmanTicket 모델을 기반으로 한 ModelViewSet을 정의함.
+class FreshmanTicketOrderView(viewsets.ModelViewSet): # viewsets로 두 개 이상의 URL 처리가 가능
+    queryset = FreshmanTicket.objects.all() # DB에서 모든 FreshmanTicket 객체를 가져와 queryset에 할당
+    serializer_class = FreshmanTicketDetailSerializer # FreshmanTicket 모델의 상세 정보 serializer 지정
+    permission_classes = (AllowAny, ) # 모든 사용자가 해당 ViewSet에 액세스할 수 있도록 함
 
     class Meta:
         examples = {
@@ -82,18 +82,20 @@ class FreshmanTicketOrderView(viewsets.ModelViewSet):
             ),
         }
     )
+
+    # POST : 새로운 FreshmanTicket 객체를 생성 및 저장
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.get_serializer(data=request.data) # request.data로 시리얼라이저 초기화
 
-        if serializer.is_valid(raise_exception=True):
-            serializer.save()
+        if serializer.is_valid(raise_exception=True): # 유효성을 검사하고 저장
+            serializer.save() # 시리얼라이저 저장 - 새로운 FreshmanTicket 객체 생성
 
-            return Response({
+            return Response({ #  성공 시 'success' 응답 + FreshmanTicket 객체의 상세 정보 반환
                 'status': 'success',
                 'data': serializer.data,
             }, status=status.HTTP_200_OK)
         
-        return Response({
+        return Response({ # 실패 시 'error' 응답 반환
             'status':'error',
         }, status=status.HTTP_400_BAD_REQUEST) 
 
@@ -196,10 +198,11 @@ class FreshmanTicketOrderView(viewsets.ModelViewSet):
         
 
 # @method_decorator(csrf_exempt, name='dispatch')
-class GeneralTicketOrderView(viewsets.ModelViewSet):
-    queryset = GeneralTicket.objects.all()
-    serializer_class = GeneralTicketDetailSerializer
-    permission_classes = (AllowAny, )
+# GeneralTicket 모델을 기반으로 한 ModelViewSet을 정의함.
+class GeneralTicketOrderView(viewsets.ModelViewSet): # viewsets로 두 개 이상의 URL 처리가 가능
+    queryset = GeneralTicket.objects.all() # DB에서 모든 GeneralTicket 객체를 가져와 queryset에 할당
+    serializer_class = GeneralTicketDetailSerializer # GeneralTicket 모델의 상세 정보 serializer 지정
+    permission_classes = (AllowAny, ) # # 모든 사용자가 해당 ViewSet에 액세스할 수 있도록 함
 
     class Meta:
         examples = {
@@ -256,30 +259,32 @@ class GeneralTicketOrderView(viewsets.ModelViewSet):
             ),
         }
     )
+
+    # POST : 새로운 GeneralTicket 객체를 생성 및 저장
     def create(self, request, *args, **kwargs):
-        order_info = request.POST.copy()
-        name_list = order_info.getlist('name[]')
-        phone_list = order_info.getlist('phone[]')
+        order_info = request.POST.copy() # 요청 데이터를 복사하여 order_info에 저장
+        name_list = order_info.getlist('name[]') # 요청에서 'name[]' 키에 해당하는 값을 가져와서 name_list를 만듦.
+        phone_list = order_info.getlist('phone[]') # 요청에서 'phone[]' 키에 해당하는 값을 가져와서 phone_list를 만듦.
 
         # if order_info['payment'] == '카카오페이':
         #     order_info['status'] = True
 
-        serializer = self.get_serializer(data=order_info) 
-        if serializer.is_valid(raise_exception=True):
-            new_order = serializer.save()
+        serializer = self.get_serializer(data=order_info) # order_info로 시리얼라이저 초기화
+        if serializer.is_valid(raise_exception=True): # 유효성 검사
+            new_order = serializer.save() # 시리얼라이저 new_order에 저장 - 새로운 GeneralTicket 객체 생성
 
-            mem = dict(zip(name_list, phone_list))
+            mem = dict(zip(name_list, phone_list)) # 이름과 전화번호를 zip하여 딕셔너리로 mem을 만듦.
 
-            for key, value in mem.items():
+            for key, value in mem.items(): # mem의 각 항목에 대해 반복하여 Participant 객체를 생성하고 저장
                 mem = Participant(name=key, phone_num=value, general_ticket=new_order)
                 mem.save()
 
-            return Response({
+            return Response({ #  성공 시 'success' 응답 + GeneralTicket 객체의 상세 정보 반환
                 'status': 'success',
                 'data': serializer.data,
             }, status=status.HTTP_200_OK)
         
-        return Response({
+        return Response({ # 실패 시 'error' 응답 반환
             'status':'error',
         }, status=status.HTTP_400_BAD_REQUEST)
     
